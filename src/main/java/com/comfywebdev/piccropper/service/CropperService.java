@@ -6,7 +6,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -76,6 +81,43 @@ public class CropperService {
 			e.printStackTrace();
 			throw new PicParsingException ( e );
 		}
+	}
+	
+	public byte[] compress ( InputStream originalPic, String ratio, String contentType ){
+		try{
+			float parsedRatio = Float.parseFloat(ratio);
+			BufferedImage parsedImage = ImageIO.read(originalPic);
+			//TODO : assert content type
+			
+			ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+			ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+			jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			jpgWriteParam.setCompressionQuality(parsedRatio);
+
+			ByteArrayOutputStream outputBytes = new ByteArrayOutputStream();
+			ImageOutputStream outputStream = new MemoryCacheImageOutputStream(outputBytes); // For example implementations see below
+			jpgWriter.setOutput(outputStream);
+			IIOImage outputImage = new IIOImage(parsedImage, null, null);
+			jpgWriter.write(null, outputImage, jpgWriteParam);
+			jpgWriter.dispose();
+			outputStream.flush();
+			outputBytes .flush();
+			
+			byte[] resultPic = outputBytes.toByteArray();
+			outputStream.close();
+			outputBytes.close();
+			return resultPic;
+		}
+		catch ( NumberFormatException e ){
+			e.printStackTrace(); //TODO
+			throw new RuntimeException ( e);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new RuntimeException ( e);
+		}
+		
+		
 	}
 	
 	

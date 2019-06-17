@@ -60,4 +60,25 @@ public class PicCropperController {
 		}
 		
 	}
+	
+	@RequestMapping ( method = RequestMethod.POST, value="/compress")
+	public @ResponseBody ResponseEntity<byte[]> compress (
+			@RequestParam("file") MultipartFile file,
+			@RequestParam String ratio ){ 
+		
+		try{
+			byte[] resultPic = cropperService.compress(file.getInputStream(), ratio, file.getContentType());
+			return ResponseEntity.ok()
+					.contentLength(file.getSize())
+					.contentType(MediaType.IMAGE_JPEG)
+					.contentLength(resultPic.length)
+					.body(resultPic);
+		} catch ( IOException e ){
+			//TODO
+			throw new RuntimeException(e);
+		}
+		
+		
+		
+	}
 }
